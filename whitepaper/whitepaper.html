@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>MeshWeaver: The Enterprise Content CI/CD Pipeline — Technical Architecture v1</title>
+<style>
+  @page {
+    size: A4;
+    margin: 22mm 20mm 20mm 20mm;
+    @bottom-center { content: counter(page); }
+  }
+
+  * { box-sizing: border-box; }
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+  body {
+    font-family: "Inter", "Helvetica Neue", "Segoe UI", Roboto, Arial, sans-serif;
+    font-size: 10.5pt;
+    line-height: 1.62;
+    color: #16181d;
+    margin: 0;
+  }
+
+  /* ---------- Cover ---------- */
+  .cover { page-break-after: always; padding-top: 34mm; }
+  .mark {
+    display: inline-block;
+    font-size: 8pt;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: #5b5f6b;
+    border: 1px solid #d9dbe1;
+    border-radius: 3px;
+    padding: 4px 9px;
+  }
+  .cover h1 {
+    font-size: 34pt;
+    line-height: 1.1;
+    letter-spacing: -0.025em;
+    font-weight: 700;
+    margin: 20mm 0 4mm 0;
+    color: #0b0c0f;
+  }
+  .cover .tagline {
+    font-size: 14pt;
+    font-weight: 400;
+    color: #4d525e;
+    letter-spacing: -0.01em;
+    margin: 0 0 16mm 0;
+  }
+  .rule { height: 3px; width: 64px; background: #b45309; border-radius: 2px; margin-bottom: 14mm; }
+  .meta-grid {
+    display: grid;
+    grid-template-columns: 34mm 1fr;
+    row-gap: 3.2mm;
+    font-size: 10pt;
+    max-width: 130mm;
+  }
+  .meta-grid dt {
+    font-weight: 600;
+    color: #6b7080;
+    font-size: 8.5pt;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding-top: 1px;
+  }
+  .meta-grid dd { margin: 0; color: #16181d; }
+  .cover-foot {
+    margin-top: 24mm;
+    padding-top: 5mm;
+    border-top: 1px solid #e6e8ec;
+    font-size: 8.5pt;
+    color: #85899a;
+  }
+
+  /* ---------- Body ---------- */
+  h2 {
+    font-size: 15pt;
+    letter-spacing: -0.015em;
+    font-weight: 700;
+    color: #0b0c0f;
+    margin: 11mm 0 3mm 0;
+    padding-bottom: 2.5mm;
+    border-bottom: 1px solid #e6e8ec;
+    page-break-after: avoid;
+  }
+  h2:first-of-type { margin-top: 0; }
+  h2 .num { color: #b45309; margin-right: 8px; font-variant-numeric: tabular-nums; }
+
+  h3 { font-size: 11pt; font-weight: 700; color: #1d2027; margin: 6mm 0 2mm 0; page-break-after: avoid; }
+
+  p { margin: 0 0 3.4mm 0; }
+
+  .lead {
+    font-size: 11pt;
+    color: #33373f;
+    border-left: 3px solid #b45309;
+    padding-left: 5mm;
+    margin-bottom: 5mm;
+  }
+
+  strong { font-weight: 650; color: #0b0c0f; }
+
+  code {
+    font-family: "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+    font-size: 8.8pt;
+    background: #f4f5f7;
+    border: 1px solid #e6e8ec;
+    border-radius: 3px;
+    padding: 0.5px 4px;
+    color: #9a4708;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 9.5pt;
+    margin: 3mm 0 5mm 0;
+    page-break-inside: avoid;
+  }
+  th {
+    text-align: left;
+    font-size: 8pt;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: #6b7080;
+    font-weight: 700;
+    border-bottom: 1.5px solid #d9dbe1;
+    padding: 0 3mm 2mm 0;
+  }
+  td { padding: 2.4mm 3mm 2.4mm 0; border-bottom: 1px solid #eef0f3; vertical-align: top; }
+  td:first-child { font-weight: 600; color: #0b0c0f; white-space: nowrap; }
+  tr:last-child td { border-bottom: none; }
+  .sub { font-weight: 400; color: #85899a; font-size: 8.5pt; }
+
+  .layer {
+    border: 1px solid #e6e8ec;
+    border-left: 3px solid #0b0c0f;
+    border-radius: 0 4px 4px 0;
+    padding: 4mm 5mm 2.5mm 5mm;
+    margin: 0 0 4mm 0;
+    page-break-inside: avoid;
+    background: #fbfbfc;
+  }
+  .layer h3 { margin-top: 0; }
+  .layer .kicker {
+    font-size: 7.5pt;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #b45309;
+    margin-bottom: 1mm;
+  }
+  .layer p:last-child { margin-bottom: 1.5mm; }
+
+  ol.flow { margin: 0 0 4mm 0; padding-left: 0; list-style: none; counter-reset: step; }
+  ol.flow li { counter-increment: step; position: relative; padding-left: 9mm; margin-bottom: 2.4mm; }
+  ol.flow li::before {
+    content: counter(step);
+    position: absolute;
+    left: 0; top: 0.4mm;
+    width: 5.6mm; height: 5.6mm;
+    background: #0b0c0f;
+    color: #fff;
+    border-radius: 50%;
+    font-size: 7.5pt;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .callout {
+    background: #f7f8fa;
+    border: 1px solid #e6e8ec;
+    border-radius: 4px;
+    padding: 4mm 5mm;
+    font-size: 9.5pt;
+    margin: 0 0 5mm 0;
+    page-break-inside: avoid;
+  }
+  .callout p:last-child { margin-bottom: 0; }
+
+  .diagram {
+    font-family: "SF Mono", Menlo, Consolas, monospace;
+    font-size: 7.6pt;
+    line-height: 1.5;
+    background: #0b0c0f;
+    color: #e8eaee;
+    border-radius: 5px;
+    padding: 5mm;
+    margin: 0 0 5mm 0;
+    white-space: pre;
+    page-break-inside: avoid;
+    overflow: hidden;
+  }
+  .diagram .hi { color: #ffb865; }
+  .diagram .dim { color: #7f8492; }
+
+  .footer-note {
+    margin-top: 10mm;
+    padding-top: 4mm;
+    border-top: 1px solid #e6e8ec;
+    font-size: 8.5pt;
+    color: #85899a;
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ COVER ============ -->
+<section class="cover">
+  <span class="mark">Technical Architecture &amp; System Design</span>
+  <h1>MeshWeaver</h1>
+  <p class="tagline">The Enterprise Content CI/CD Pipeline for Adobe Express</p>
+  <div class="rule"></div>
+
+  <dl class="meta-grid">
+    <dt>Author</dt><dd>Areeb Abdul Ghani</dd>
+    <dt>Role</dt><dd>Solo Founder &amp; Infrastructure Engineer — 7 years, 3 shipped Adobe Express add-ons</dd>
+    <dt>Contact</dt><dd>areebghani359@gmail.com</dd>
+    <dt>Location</dt><dd>Bengaluru, Karnataka, India</dd>
+    <dt>Document</dt><dd>MeshWeaver_Technical_Architecture_v1</dd>
+    <dt>Date</dt><dd>July 16, 2026</dd>
+    <dt>Stage</dt><dd>Pre-seed · Prototyping · Public beta target September 2026</dd>
+  </dl>
+
+  <p class="cover-foot">Submitted in support of an application to the Adobe Fund for Design.</p>
+</section>
+
+<!-- ============ 1 ============ -->
+<h2><span class="num">1</span>Executive Summary</h2>
+
+<p class="lead">MeshWeaver turns Adobe Express from a manual editing interface into a continuous integration and deployment pipeline for enterprise marketing — where sales collateral is built, personalized, and shipped by a pipeline rather than by hand.</p>
+
+<p>An enterprise user links a master Express presentation to a CRM such as Salesforce or Marketo. When an account is flagged for outreach, MeshWeaver pulls that firmographic data through a zero-trust ingestion path, semantically maps the document, rewrites the value proposition for the specific prospect, reflows the layout so the new copy cannot break the design, and presents a batch of hyper-personalized decks for human approval.</p>
+
+<p>The system is four layers: a <strong>Zero-Trust Ingestion Plane</strong>, a <strong>Semantic Document Map</strong>, a <strong>Generative Agent</strong>, and a <strong>Layout Reflow Engine</strong> — with a human approval gate before anything deploys. This document details the architecture, data flows, security model, and roadmap.</p>
+
+<!-- ============ 2 ============ -->
+<h2><span class="num">2</span>The Core Engineering Problem</h2>
+
+<p>Account-based marketing is bottlenecked on manual design labor. A rep duplicates the master deck, retypes the value proposition for the prospect, and then spends the real time on the part nobody budgets for: fixing what the new copy broke. The headline now wraps to three lines. The body overflows its frame. The layout that a designer balanced is quietly ruined, and the deck ships anyway.</p>
+
+<p>Two distinct problems hide inside that workflow, and most tools solve neither.</p>
+
+<div class="callout">
+  <p><strong>Problem one — the data cannot get to the canvas.</strong> The prospect data that would make personalization valuable lives in systems that are, correctly, locked down. Piping CRM records into a creative tool is a security review, not a feature request. Most creative tools have no answer to that review, so the enterprise never starts.</p>
+  <p><strong>Problem two — generation is not layout.</strong> Rewriting text is the easy half. Making generated copy <em>fit</em> requires understanding which frame is a headline and which is body, what the hierarchy is, and how a frame must resize when its content changes length. A model that guesses where text should go produces work a designer must redo.</p>
+</div>
+
+<p>MeshWeaver is built on the position that this is an infrastructure problem. The creative canvas is the last node in a corporate data pipeline, and it should be engineered like every other node: authenticated, authorized, observable, and automated.</p>
+
+<!-- ============ 3 ============ -->
+<h2><span class="num">3</span>System Architecture</h2>
+
+<p>Four layers, with a human gate before deployment.</p>
+
+<div class="diagram"><span class="dim">┌──────────────────────── CORPORATE DATA SILOS ────────────────────┐</span>
+<span class="dim">│</span>   Salesforce   ·   Marketo   ·   HubSpot   ·   Workfront        <span class="dim">│</span>
+<span class="dim">└────────────────────────────┬─────────────────────────────────────┘</span>
+                  OAuth 2.0 + PKCE · scoped reads
+<span class="dim">┌────────────────────────────▼─────────────────────────────────────┐</span>
+<span class="hi">│  LAYER 1 — ZERO-TRUST INGESTION PLANE                             │</span>
+<span class="dim">│</span>  mTLS · ephemeral workers · no data at rest · full audit log     <span class="dim">│</span>
+<span class="dim">└────────────────────────────┬─────────────────────────────────────┘</span>
+<span class="dim">┌────────────────────────────▼─────────────────────────────────────┐</span>
+<span class="hi">│  LAYER 2 — SEMANTIC DOCUMENT MAP        (Express Document API)    │</span>
+<span class="dim">│</span>  allDescendants ─► allTextContent ─► role inference              <span class="dim">│</span>
+<span class="dim">│</span>  headline · subhead · body · caption   (by hierarchy, not guess)  <span class="dim">│</span>
+<span class="dim">└────────────────────────────┬─────────────────────────────────────┘</span>
+<span class="dim">┌────────────────────────────▼─────────────────────────────────────┐</span>
+<span class="hi">│  LAYER 3 — GENERATIVE AGENT                                       │</span>
+<span class="dim">│</span>  firmographics + role map ─► targeted value proposition          <span class="dim">│</span>
+<span class="dim">│</span>  brand guidelines enforced as hard constraints                   <span class="dim">│</span>
+<span class="dim">└────────────────────────────┬─────────────────────────────────────┘</span>
+<span class="dim">┌────────────────────────────▼─────────────────────────────────────┐</span>
+<span class="hi">│  LAYER 4 — LAYOUT REFLOW ENGINE                                   │</span>
+<span class="dim">│</span>  Node resize · threaded text ─► copy fits, design holds          <span class="dim">│</span>
+<span class="dim">└────────────────────────────┬─────────────────────────────────────┘</span>
+                    <span class="hi">HUMAN APPROVAL GATE</span>
+<span class="dim">┌────────────────────────────▼─────────────────────────────────────┐</span>
+<span class="dim">│</span>  Batch deploy — hundreds of compliant, personalized variants     <span class="dim">│</span>
+<span class="dim">└──────────────────────────────────────────────────────────────────┘</span></div>
+
+<div class="layer">
+  <p class="kicker">Layer One</p>
+  <h3>The Zero-Trust Ingestion Plane</h3>
+  <p>This layer exists to pass a Fortune 500 security review, because that review — not the design work — is what actually blocks enterprise adoption.</p>
+  <p>Connections to Salesforce, Marketo, HubSpot, and Workfront use OAuth 2.0 with PKCE and narrowly scoped read permissions. Data is processed in ephemeral, per-job workers with <strong>no persistence of customer CRM records</strong>; when the job ends, the worker and its memory are gone. Service-to-service traffic is mutually authenticated, and every read is audit-logged against the account that triggered it.</p>
+  <p>This design is a direct transfer from the author's professional work: service mesh architecture with Istio and Cilium, where zero-trust between services is the default posture rather than a bolt-on. The same identity, encryption, and policy primitives apply cleanly to piping a CRM record into a canvas.</p>
+</div>
+
+<div class="layer">
+  <p class="kicker">Layer Two</p>
+  <h3>The Semantic Document Map</h3>
+  <p>Before a single word is rewritten, MeshWeaver must know what it is looking at. Using the Express Document API's <code>allDescendants</code> and <code>allTextContent</code> accessors, the system walks the full node tree and builds a structural map of the deck.</p>
+  <p>Role inference is derived from <strong>hierarchy, not heuristics</strong>: relative type scale, position in the tree, and containment tell the system which frame is a headline, which is a subhead, which is body copy, and which is a caption. This map is the contract that everything downstream depends on — an agent that knows a frame is a headline can write to its constraints, while an agent that guesses produces work a designer must undo.</p>
+</div>
+
+<div class="layer">
+  <p class="kicker">Layer Three</p>
+  <h3>The Generative Agent</h3>
+  <p>The agent receives two inputs: the firmographic profile from Layer One and the role map from Layer Two. It rewrites the value proposition to target the specific prospect — their industry, their scale, their stated priorities — rather than substituting a company name into a fixed sentence.</p>
+  <p>Brand guidelines are enforced as hard constraints, not prompt suggestions. The agent writes <em>into</em> a known slot with a known role and a known length budget, which is what separates this from generation in a vacuum.</p>
+</div>
+
+<div class="layer">
+  <p class="kicker">Layer Four</p>
+  <h3>The Layout Reflow Engine</h3>
+  <p>Generated copy is never the same length as what it replaced, and that is where automated personalization usually dies. The reflow engine uses the Express <strong>Node resize methods</strong> and <strong>threaded text controls</strong> to reflow the layout programmatically, so new copy respects the visual boundaries the designer established.</p>
+  <p>The result is the difference between a tool that writes text and a tool that ships a deck. Copy fits; the design holds; no human reopens the file to fix wrapping.</p>
+</div>
+
+<h3>The human gate</h3>
+<p>MeshWeaver does not auto-send. The pipeline's output is a batch of personalized, correctly formatted presentations staged for review. The user approves for deployment. This is deliberate: in a CI/CD analogy, MeshWeaver automates build and test — a human still authorizes the release.</p>
+
+<!-- ============ 4 ============ -->
+<h2><span class="num">4</span>Data Flow</h2>
+
+<p>A typical account-based marketing cycle proceeds as follows.</p>
+
+<ol class="flow">
+  <li>An account is flagged for outreach in the connected CRM.</li>
+  <li>The <strong>Ingestion Plane</strong> pulls that account's firmographic data over a scoped, mutually authenticated connection into an ephemeral worker.</li>
+  <li>The <strong>Semantic Document Map</strong> walks the master deck via <code>allDescendants</code> and <code>allTextContent</code>, inferring each text frame's role from hierarchy.</li>
+  <li>The <strong>Generative Agent</strong> rewrites the value proposition against the prospect's profile, constrained by brand guidelines and each slot's length budget.</li>
+  <li>The <strong>Layout Reflow Engine</strong> resizes nodes and rethreads text so the new copy fits the design rather than breaking it.</li>
+  <li>The batch surfaces for <strong>human review</strong>. The user approves, and the variants deploy.</li>
+  <li>The worker is destroyed. No CRM data remains at rest; the audit log retains who triggered what.</li>
+</ol>
+
+<!-- ============ 5 ============ -->
+<h2><span class="num">5</span>Security and Enterprise Compliance</h2>
+
+<p>Security is the product, not a section of it. An add-on that touches CRM data is evaluated by a security team before it is evaluated by a marketing team.</p>
+
+<table>
+  <thead><tr><th>Control</th><th>Implementation</th></tr></thead>
+  <tbody>
+    <tr><td>Authentication</td><td>OAuth 2.0 with PKCE for every third-party connection. No long-lived secrets in the add-on runtime.</td></tr>
+    <tr><td>Authorization</td><td>Narrowly scoped read permissions per connector. The pipeline requests the minimum field set a job requires.</td></tr>
+    <tr><td>Data residency</td><td>Ephemeral per-job workers. No persistent storage of client CRM data at any stage.</td></tr>
+    <tr><td>Transport</td><td>Mutual TLS between services, following the zero-trust posture standard in Istio and Cilium service meshes.</td></tr>
+    <tr><td>Auditability</td><td>Every data read and every generated variant is logged against the triggering account for compliance review.</td></tr>
+    <tr><td>Human authority</td><td>No autonomous deployment. Every batch passes a human approval gate before release.</td></tr>
+    <tr><td>Certification</td><td>SOC 2 Type II targeted post-beta, driven by enterprise procurement requirements.</td></tr>
+  </tbody>
+</table>
+
+<!-- ============ 6 ============ -->
+<h2><span class="num">6</span>Implementation Roadmap</h2>
+
+<table>
+  <thead><tr><th>Phase</th><th>Scope</th></tr></thead>
+  <tbody>
+    <tr><td>Phase One<br><span class="sub">Month One</span></td><td>Semantic Document Map over multi-page decks. Layout Reflow Engine against Node resize and threaded text. Free tier: manual data input, no external connectors — proving the core technology end to end.</td></tr>
+    <tr><td>Phase Two<br><span class="sub">Month Two</span></td><td>Zero-Trust Ingestion Plane with the first two connectors (Salesforce, HubSpot). Generative Agent with brand-constraint enforcement. Batch review UI in Spectrum Web Components. Public beta.</td></tr>
+    <tr><td>Phase Three<br><span class="sub">Post-grant</span></td><td>Marketo and Workfront connectors, enterprise audit dashboards, per-seat administration, and SOC 2 evidence collection.</td></tr>
+  </tbody>
+</table>
+
+<div class="callout">
+  <p><strong>Development approach.</strong> The backend build uses the Adobe Express Developer MCP Server to iterate rapidly on complex API integrations. The add-on UI is architected in <strong>Spectrum Web Components</strong> from day one, so it natively supports the upcoming dark mode rollout and reads as a first-party enterprise extension rather than a bolted-on panel.</p>
+</div>
+
+<!-- ============ 7 ============ -->
+<h2><span class="num">7</span>Business Impact</h2>
+
+<p>Adobe's strategic push is the content supply chain and enterprise efficiency. MeshWeaver is a direct expression of that thesis: it transforms Express from a standalone design application into a deeply connected node in a corporate marketing technology stack.</p>
+
+<p>The commercial argument for Adobe is enterprise licensing. Organizations doing account-based marketing currently rely on manual design tweaks for every account, which does not scale and quietly burns designer hours on wrapping fixes. MeshWeaver lets them treat Express templates as dynamic, data-driven assets and orchestrate real work at volume. Once a company's CRM connections, brand constraints, and approval workflows live in MeshWeaver on Express, the switching cost is the pipeline itself — not the files.</p>
+
+<h3>Business model</h3>
+<table>
+  <thead><tr><th>Tier</th><th>Includes</th></tr></thead>
+  <tbody>
+    <tr><td>Free</td><td>Semantic layout adjustment and AI-driven text reflow using manual data input. The full core technology, ungated — which drives acquisition and proves the engine before any procurement conversation.</td></tr>
+    <tr><td>Enterprise<br><span class="sub">Per seat</span></td><td>Secure zero-trust connections to Salesforce, HubSpot, Marketo, and Workfront; heavy computational processing; batch generation; audit trails and administration.</td></tr>
+  </tbody>
+</table>
+<p>The gate is drawn exactly where cost and value both concentrate: the connectors and the compute. Free users experience the magic on manual inputs. The teams who need automated account-based marketing are the teams with budget, and they are paying for precisely the parts that are expensive to run.</p>
+
+<!-- ============ 8 ============ -->
+<h2><span class="num">8</span>Why This Is Hard to Copy</h2>
+
+<p>Almost every AI design tool on the market is <strong>generative in a vacuum</strong>. It makes images from text prompts with zero understanding of corporate data or semantic layout logic. It produces something that looks plausible and leaves a human to reconcile it with reality.</p>
+
+<p>MeshWeaver's difference is that it brings CI/CD automation to the canvas, and the two halves of that require opposite skill sets. The zero-trust CRM ingestion is infrastructure work — identity, mTLS, ephemeral compute, audit — the kind of thing earned running Kubernetes and service meshes in production, not learned from an SDK guide. The semantic mapping and programmatic reflow are canvas work, requiring real knowledge of the Express Document API's node tree, resize semantics, and threaded text behavior — earned by shipping three Express add-ons.</p>
+
+<p>No other add-on combines secure, zero-trust CRM data ingestion with programmatic layout reflow to generate hundreds of compliant variations autonomously. A frontend developer would not pass the security review. An infrastructure engineer would not know how to reflow a node tree without destroying the design. That intersection is the moat.</p>
+
+<p class="footer-note">MeshWeaver — The Enterprise Content CI/CD Pipeline · Areeb Abdul Ghani · areebghani359@gmail.com · Bengaluru, India · July 16, 2026</p>
+
+</body>
+</html>

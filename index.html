@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MeshWeaver — The Enterprise Content CI/CD Pipeline for Adobe Express</title>
+<meta name="description" content="MeshWeaver turns Adobe Express into a CI/CD pipeline for enterprise marketing: zero-trust CRM ingestion, semantic document mapping, and programmatic layout reflow.">
+<meta property="og:title" content="MeshWeaver — The Enterprise Content CI/CD Pipeline">
+<meta property="og:description" content="Generation is the easy half. MeshWeaver understands your document structure and reflows the layout so generated copy fits — at enterprise scale, under zero trust.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%2308090c'/><g fill='none' stroke='%23ffab3d' stroke-width='7' stroke-linecap='round'><path d='M24 30h52M24 50h52M24 70h52'/><circle cx='24' cy='30' r='0.5'/></g></svg>">
+<style>
+  :root {
+    --bg: #08090c;
+    --panel: #12120f;
+    --line: #2a2820;
+    --line-soft: #1a1913;
+    --text: #efece5;
+    --muted: #a09a8c;
+    --dim: #756f62;
+    --accent: #ffab3d;
+    --accent-ink: #170d00;
+    --mono: "SF Mono", "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+    --sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 66% 42% at 50% -6%, rgba(255,171,61,0.07), transparent 72%),
+      linear-gradient(var(--line-soft) 1px, transparent 1px) 0 0 / 100% 64px,
+      linear-gradient(90deg, var(--line-soft) 1px, transparent 1px) 0 0 / 64px 100%;
+    mask-image: radial-gradient(ellipse 90% 58% at 50% 0%, #000 20%, transparent 78%);
+    -webkit-mask-image: radial-gradient(ellipse 90% 58% at 50% 0%, #000 20%, transparent 78%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .wrap { position: relative; z-index: 1; max-width: 860px; margin: 0 auto; padding: 0 28px; }
+
+  a { color: inherit; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 4px; }
+
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 6px 13px;
+    background: rgba(255,255,255,0.015);
+  }
+  .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 0 0 rgba(255,171,61,0.6);
+    animation: pulse 2.6s ease-out infinite;
+  }
+  @keyframes pulse {
+    0%   { box-shadow: 0 0 0 0 rgba(255,171,61,0.5); }
+    70%  { box-shadow: 0 0 0 7px rgba(255,171,61,0); }
+    100% { box-shadow: 0 0 0 0 rgba(255,171,61,0); }
+  }
+
+  /* ---------- Hero ---------- */
+  header { padding: 118px 0 82px; }
+
+  h1 { font-size: clamp(42px, 8.6vw, 78px); line-height: 0.99; letter-spacing: -0.042em; font-weight: 700; margin: 30px 0 18px; }
+  h1 .glyph { color: var(--accent); }
+
+  .tagline { font-size: clamp(19px, 3.6vw, 25px); line-height: 1.42; color: var(--muted); letter-spacing: -0.018em; max-width: 32ch; }
+  .tagline b { color: var(--text); font-weight: 600; }
+
+  .hero-sub { margin-top: 26px; max-width: 60ch; color: var(--muted); font-size: 15.5px; }
+
+  .cta-row { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 38px; }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    font-size: 14.5px;
+    font-weight: 550;
+    text-decoration: none;
+    padding: 11px 19px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    color: var(--text);
+    background: var(--panel);
+    transition: border-color .18s ease, background .18s ease, transform .18s ease;
+  }
+  .btn:hover { border-color: #443f31; background: #1b1a14; transform: translateY(-1px); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 650; }
+  .btn.primary:hover { background: #ffbe66; border-color: #ffbe66; }
+  .btn .arw { opacity: .65; }
+
+  /* ---------- Sections ---------- */
+  section { padding: 62px 0; border-top: 1px solid var(--line-soft); }
+
+  .sec-label { font-family: var(--mono); font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--accent); margin-bottom: 16px; }
+
+  h2 { font-size: clamp(27px, 5vw, 34px); letter-spacing: -0.03em; line-height: 1.18; font-weight: 650; margin-bottom: 18px; }
+
+  p.body { color: var(--muted); max-width: 66ch; margin-bottom: 15px; }
+  p.body b, p.body strong { color: var(--text); font-weight: 600; }
+  .quiet { color: var(--dim); }
+
+  .split { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 30px; }
+  .card {
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 22px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.022), rgba(255,255,255,0));
+  }
+  .card .k { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.13em; text-transform: uppercase; margin-bottom: 10px; color: var(--dim); }
+  .card.now { border-color: #2f2c23; }
+  .card.now .k { color: #9a9385; }
+  .card.next { border-color: #3d3320; box-shadow: inset 0 0 0 1px rgba(255,171,61,0.06); }
+  .card.next .k { color: var(--accent); }
+  .card h3 { font-size: 17px; font-weight: 600; letter-spacing: -0.015em; margin-bottom: 7px; }
+  .card p { font-size: 14.2px; color: var(--muted); line-height: 1.6; }
+
+  /* pipeline layers */
+  .layers { margin-top: 26px; display: flex; flex-direction: column; gap: 12px; }
+  .layer {
+    display: grid;
+    grid-template-columns: 46px 1fr;
+    gap: 18px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 22px;
+    background: var(--panel);
+    transition: border-color .18s ease, transform .18s ease;
+  }
+  .layer:hover { border-color: #443f31; transform: translateY(-1px); }
+  .layer .n {
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--accent);
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255,171,61,0.06);
+  }
+  .layer h3 { font-size: 17.5px; font-weight: 620; letter-spacing: -0.018em; margin-bottom: 6px; }
+  .layer p { font-size: 14.6px; color: var(--muted); line-height: 1.62; margin-bottom: 10px; }
+  .layer p:last-child { margin-bottom: 0; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    padding: 3px 8px;
+    background: rgba(255,255,255,0.02);
+  }
+
+  .gate {
+    margin-top: 12px;
+    border: 1px dashed #4a4436;
+    border-radius: 10px;
+    padding: 16px 22px;
+    background: rgba(255,171,61,0.03);
+    font-size: 14.2px;
+    color: var(--muted);
+  }
+  .gate b { color: var(--text); font-weight: 600; }
+
+  /* security list */
+  .sec-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(224px, 1fr)); gap: 12px; margin-top: 28px; }
+  .sec-item { border: 1px solid var(--line); border-radius: 10px; padding: 18px; background: var(--panel); }
+  .sec-item .nm { font-size: 15.5px; font-weight: 620; letter-spacing: -0.015em; margin-bottom: 7px; }
+  .sec-item p { font-size: 13.4px; color: var(--muted); line-height: 1.56; }
+
+  /* status */
+  .status-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(158px, 1fr)); gap: 12px; margin-top: 28px; }
+  .stat { border: 1px solid var(--line); border-radius: 10px; padding: 18px; background: var(--panel); }
+  .stat .v { font-size: 21px; font-weight: 650; letter-spacing: -0.025em; margin-bottom: 3px; }
+  .stat .l { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.11em; text-transform: uppercase; color: var(--dim); }
+  .stat .v .accent { color: var(--accent); }
+
+  footer { border-top: 1px solid var(--line-soft); padding: 54px 0 64px; }
+  .foot-mail {
+    display: inline-block;
+    font-size: clamp(21px, 4.4vw, 30px);
+    font-weight: 600;
+    letter-spacing: -0.028em;
+    text-decoration: none;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 3px;
+    transition: color .18s ease, border-color .18s ease;
+    word-break: break-word;
+  }
+  .foot-mail:hover { color: var(--accent); border-color: var(--accent); }
+  .foot-meta {
+    margin-top: 26px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 18px;
+    font-family: var(--mono);
+    font-size: 11.5px;
+    color: var(--dim);
+    letter-spacing: 0.03em;
+  }
+  .foot-meta a { text-decoration: none; border-bottom: 1px solid var(--line); }
+  .foot-meta a:hover { color: var(--text); }
+
+  @media (max-width: 640px) {
+    header { padding: 78px 0 60px; }
+    section { padding: 50px 0; }
+    .split { grid-template-columns: 1fr; }
+    .layer { grid-template-columns: 1fr; gap: 12px; }
+    .layer .n { width: 34px; }
+    .cta-row .btn { flex: 1 1 auto; justify-content: center; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <header>
+    <span class="tag"><span class="dot" aria-hidden="true"></span>Pre-seed · Prototyping</span>
+    <h1>MeshWeaver<span class="glyph" aria-hidden="true">.</span></h1>
+    <p class="tagline">The <b>Enterprise Content CI/CD Pipeline</b> for Adobe&nbsp;Express.</p>
+    <p class="hero-sub">Link a master deck to your CRM. MeshWeaver maps the document semantically, rewrites the value proposition for each prospect, and reflows the layout so the new copy fits — then hands you a batch to approve. Build and test, automated. The release is still yours.</p>
+
+    <div class="cta-row">
+      <a class="btn primary" href="MeshWeaver_Technical_Architecture_v1.pdf">Read the whitepaper <span class="arw" aria-hidden="true">↗</span></a>
+      <a class="btn" href="#pipeline">Architecture</a>
+      <a class="btn" href="mailto:areebghani359@gmail.com">Get in touch</a>
+    </div>
+  </header>
+
+  <main>
+
+  <section id="problem">
+    <p class="sec-label">01 — The Problem</p>
+    <h2>Generation is the easy half.</h2>
+    <p class="body">Account-based marketing is bottlenecked on manual design labor. A rep duplicates the master deck, retypes the pitch for the prospect, and then spends the real time on the part nobody budgets for: fixing what the new copy broke. The headline wraps to three lines. The body overflows its frame. A designer's balance is quietly ruined — and the deck ships anyway.</p>
+    <p class="body">Two problems hide in that workflow, and most tools solve neither. <b>The data can't reach the canvas</b>, because CRM records live in systems that are correctly locked down — piping them into a creative tool is a security review, not a feature request. And <b>generation isn't layout</b>: rewriting text is easy, but making it <i>fit</i> means knowing which frame is a headline, what the hierarchy is, and how a node must resize when content changes length.</p>
+    <p class="body quiet">The creative canvas is the last node in a corporate data pipeline. It should be engineered like every other node — authenticated, authorized, observable, automated. <b>That is MeshWeaver.</b></p>
+
+    <div class="split">
+      <div class="card now">
+        <p class="k">Every AI design tool</p>
+        <h3>Generative in a vacuum</h3>
+        <p>Makes something plausible from a prompt, with zero understanding of your corporate data or your layout logic. A human reconciles it with reality afterward.</p>
+      </div>
+      <div class="card next">
+        <p class="k">With MeshWeaver</p>
+        <h3>CI/CD on the canvas</h3>
+        <p>Reads your real CRM data under zero trust, understands the document's structure, and reflows the design so hundreds of compliant variants come out the other end.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="pipeline">
+    <p class="sec-label">02 — The Pipeline</p>
+    <h2>Four layers. One approval gate.</h2>
+    <p class="body">Express becomes a deeply connected node in the marketing technology stack — not a standalone app you export from.</p>
+
+    <div class="layers">
+      <div class="layer">
+        <div class="n" aria-hidden="true">01</div>
+        <div>
+          <h3>Zero-Trust Ingestion Plane</h3>
+          <p>This layer exists to pass a Fortune 500 security review — because that review, not the design work, is what actually blocks enterprise adoption. Scoped OAuth 2.0 + PKCE connections, ephemeral per-job workers, <b>no CRM data at rest</b>, mutual TLS between services, every read audit-logged. The same zero-trust posture as an Istio or Cilium service mesh, pointed at a canvas.</p>
+          <div class="chips">
+            <span class="chip">OAuth 2.0 + PKCE</span>
+            <span class="chip">mTLS</span>
+            <span class="chip">ephemeral workers</span>
+            <span class="chip">audit log</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="layer">
+        <div class="n" aria-hidden="true">02</div>
+        <div>
+          <h3>Semantic Document Map</h3>
+          <p>Before a word is rewritten, MeshWeaver walks the full node tree via <span class="chip">allDescendants</span> and <span class="chip">allTextContent</span> and builds a structural map. Roles come from <b>hierarchy, not heuristics</b> — type scale, tree position, containment tell it which frame is a headline, a subhead, body, a caption. Every layer downstream depends on this contract.</p>
+          <div class="chips">
+            <span class="chip">node tree walk</span>
+            <span class="chip">role inference</span>
+            <span class="chip">hierarchy-derived</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="layer">
+        <div class="n" aria-hidden="true">03</div>
+        <div>
+          <h3>Generative Agent</h3>
+          <p>Takes the firmographic profile and the role map, then rewrites the value proposition for that specific prospect — their industry, their scale, their priorities — rather than substituting a name into a fixed sentence. Brand guidelines are hard constraints, not prompt suggestions. The agent writes into a known slot, with a known role and a known length budget.</p>
+          <div class="chips">
+            <span class="chip">firmographics</span>
+            <span class="chip">brand constraints</span>
+            <span class="chip">length budgets</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="layer">
+        <div class="n" aria-hidden="true">04</div>
+        <div>
+          <h3>Layout Reflow Engine</h3>
+          <p>Generated copy is never the length of what it replaced, and that is where automated personalization usually dies. The engine uses <b>Node resize methods</b> and <b>threaded text controls</b> to reflow programmatically, so new copy respects the boundaries the designer set. This is the difference between a tool that writes text and a tool that ships a deck.</p>
+          <div class="chips">
+            <span class="chip">Node resize</span>
+            <span class="chip">threaded text</span>
+            <span class="chip">design holds</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <p class="gate"><b>The human gate.</b> MeshWeaver does not auto-send. The pipeline stages a batch of personalized, correctly formatted decks for review, and you approve them for deployment. In CI/CD terms: build and test are automated — a human still authorizes the release.</p>
+  </section>
+
+  <section id="security">
+    <p class="sec-label">03 — Security</p>
+    <h2>Security is the product.</h2>
+    <p class="body">An add-on that touches CRM data gets evaluated by a security team before a marketing team ever sees it. MeshWeaver is designed for that conversation first.</p>
+
+    <div class="sec-grid">
+      <div class="sec-item">
+        <p class="nm">Nothing at rest</p>
+        <p>Ephemeral per-job workers process the data and are destroyed. No persistent storage of client CRM records at any stage.</p>
+      </div>
+      <div class="sec-item">
+        <p class="nm">Least privilege</p>
+        <p>Narrowly scoped read permissions per connector. The pipeline requests the minimum field set a job actually needs.</p>
+      </div>
+      <div class="sec-item">
+        <p class="nm">Zero trust in transit</p>
+        <p>Mutual TLS between services — the default posture in a service mesh, applied to the path between your CRM and the canvas.</p>
+      </div>
+      <div class="sec-item">
+        <p class="nm">Provable</p>
+        <p>Every data read and generated variant is logged against the triggering account. SOC 2 Type II targeted post-beta.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="status">
+    <p class="sec-label">04 — The Status</p>
+    <h2>Prototyping. Seeking funding for public beta.</h2>
+    <p class="body">Built solo in Bengaluru, on the back of three shipped Express add-ons and seven years of cloud infrastructure, Kubernetes orchestration, and secure data pipelines for enterprise environments. The backend build uses the Adobe Express Developer MCP Server to iterate on complex API integrations; the UI is architected in <b>Spectrum Web Components</b> from day one, so it natively supports the upcoming dark mode rollout and reads as a first-party enterprise extension.</p>
+    <p class="body quiet">A frontend developer would not pass the security review. An infrastructure engineer would not reflow a node tree without destroying the design. The grant funds the intersection.</p>
+
+    <div class="status-grid">
+      <div class="stat"><p class="v">Pre-seed</p><p class="l">Stage</p></div>
+      <div class="stat"><p class="v"><span class="accent">Sept 2026</span></p><p class="l">Public beta</p></div>
+      <div class="stat"><p class="v">3 shipped</p><p class="l">Express add-ons</p></div>
+      <div class="stat"><p class="v">Bengaluru</p><p class="l">Built solo in</p></div>
+    </div>
+  </section>
+
+  </main>
+
+  <footer>
+    <p class="sec-label">Contact</p>
+    <a class="foot-mail" href="mailto:areebghani359@gmail.com">areebghani359@gmail.com</a>
+    <div class="foot-meta">
+      <span>Areeb Abdul Ghani</span>
+      <span>Bengaluru, India</span>
+      <a href="MeshWeaver_Technical_Architecture_v1.pdf">Technical Architecture v1 (PDF)</a>
+      <span>© 2026 MeshWeaver</span>
+    </div>
+  </footer>
+
+</div>
+
+</body>
+</html>
